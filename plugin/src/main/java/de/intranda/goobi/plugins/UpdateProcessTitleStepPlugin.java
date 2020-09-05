@@ -207,11 +207,7 @@ public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
         }
         return PluginReturnValue.FINISH;
     }
-    
-    public static void main(String[] args) {
-    	System.out.println(UUID.randomUUID().toString());
-	}
-    
+
     @Data
     @RequiredArgsConstructor
     public class ParameterItem {

@@ -79,7 +79,7 @@ public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
         SubnodeConfiguration myconfig = ConfigPlugins.getProjectAndStepConfig(title, step);
         regexCheck = myconfig.getBoolean("regexCheck", true); 
         parameterList = new ArrayList<>();
-        List<HierarchicalConfiguration> fields = myconfig.configurationsAt("namepart");
+        List<HierarchicalConfiguration> fields = myconfig.configurationsAt("content");
         for (HierarchicalConfiguration hc : fields) {
         	ParameterItem p = new ParameterItem(hc.getString(".", ""), hc.getString("@type", "static"));
         	parameterList.add(p);

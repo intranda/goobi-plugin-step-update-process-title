@@ -19,11 +19,11 @@
 			random: a random number with a defined length 
 			uuid: a UUID with 36 characters
 			timestamp: a numeric timestamp -->
-		<namepart type="variable">{meta.CatalogIDDigital}</namepart>
-		<namepart type="static">_</namepart>
-		<namepart type="random">9</namepart>
-		<namepart type="uuid" />
-		<namepart type="timestamp" />
+		<content type="variable">{meta.CatalogIDDigital}</content>
+		<content type="static">_</content>
+		<content type="random">9</content>
+		<content type="uuid" />
+		<content type="timestamp" />
 
 		<!-- define if the generated process title shall run through Goobis default regular expression for titles -->
 		<regexCheck>true</regexCheck>		

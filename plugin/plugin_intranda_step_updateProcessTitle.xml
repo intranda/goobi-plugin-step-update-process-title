@@ -1,0 +1,33 @@
+<config_plugin>
+
+	<!--
+        order of configuration is:
+          1.) project name and step name matches
+          2.) step name matches and project is *
+          3.) project name matches and step name is *
+          4.) project name and step name are *
+	-->
+	
+	<config>
+		<!-- which projects to use for (can be more then one, otherwise use *) -->
+		<project>*</project>
+		<step>*</step>
+		
+		<!-- define a list of elements here to be used for the process title
+			variable: this content gets analyzed and replaced by the variable replacer 
+			static: a static string
+			random: a random number with a defined length 
+			uuid: a UUID with 36 characters
+			timestamp: a numeric timestamp -->
+		<namepart type="variable">{meta.CatalogIDDigital}</namepart>
+		<namepart type="static">_</namepart>
+		<namepart type="random">9</namepart>
+		<namepart type="uuid" />
+		<namepart type="timestamp" />
+
+		<!-- define if the generated process title shall run through Goobis default regular expression for titles -->
+		<regexCheck>true</regexCheck>		
+
+	</config>
+
+</config_plugin>

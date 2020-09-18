@@ -1,6 +1,10 @@
 package de.intranda.goobi.plugins;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 /**
@@ -183,15 +187,26 @@ public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
 	        }
 	        
 	        // remove non-ascii characters for the sake of TIFF header limits
-	        String title = sb.toString().trim();
+	        String newTitle = sb.toString().trim();
 	        if (regexCheck) {
 		        String regex = ConfigurationHelper.getInstance().getProcessTitleReplacementRegex();
-		        title = title.replaceAll(regex, "");
+		        newTitle = newTitle.replaceAll(regex, "");
 	        }
 	        
 	        // update the process to use the new title
-	        process.setTitel(title);
+	        String oldTitle = process.getTitel();
+	        process.setTitel(newTitle);
 	        ProcessManager.saveProcess(process);
+	        
+	        // adapt the folder names if needed
+	        DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(process.getImagesDirectory()));
+            for (Path path : stream) {
+                if (Files.isDirectory(path) && path.getFileName().toString().contains(oldTitle) && !path.getFileName().toString().contains(newTitle)) {
+                	Path newPath = Paths.get(path.getParent().toString(), path.getFileName().toString().replace(oldTitle, newTitle));
+                	Files.move(path, newPath);
+                }
+            }
+	        
 		} catch (ReadException | PreferencesException | WriteException | IOException | InterruptedException
 				| SwapException | DAOException e) {
 		    log.error("Error while renaming the process.");

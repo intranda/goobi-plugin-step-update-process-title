@@ -59,12 +59,11 @@ import net.xeoh.plugins.base.annotations.PluginImplementation;
 import ugh.dl.Fileformat;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
-import ugh.exceptions.WriteException;
 
 @PluginImplementation
 @Log4j2
 public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
-    
+
     @Getter
     private String title = "intranda_step_updateProcessTitle";
     @Getter
@@ -78,22 +77,22 @@ public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
     public void initialize(Step step, String returnPath) {
         this.returnPath = returnPath;
         this.step = step;
-                
+
         // read parameters from correct block in configuration file
         SubnodeConfiguration myconfig = ConfigPlugins.getProjectAndStepConfig(title, step);
-        regexCheck = myconfig.getBoolean("regexCheck", true); 
+        regexCheck = myconfig.getBoolean("regexCheck", true);
         parameterList = new ArrayList<>();
         List<HierarchicalConfiguration> fields = myconfig.configurationsAt("content");
         for (HierarchicalConfiguration hc : fields) {
-        	ParameterItem p = new ParameterItem(hc.getString(".", ""), hc.getString("@type", "static"));
-        	parameterList.add(p);
+            ParameterItem p = new ParameterItem(hc.getString(".", ""), hc.getString("@type", "static"));
+            parameterList.add(p);
         }
         log.info("UpdateProcessTitle step plugin initialized");
     }
 
     @Override
     public PluginGuiType getPluginGuiType() {
-       return PluginGuiType.NONE;
+        return PluginGuiType.NONE;
     }
 
     @Override
@@ -115,7 +114,7 @@ public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
     public String finish() {
         return "/uii" + returnPath;
     }
-    
+
     @Override
     public int getInterfaceVersion() {
         return 0;
@@ -125,7 +124,7 @@ public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
     public HashMap<String, StepReturnValue> validate() {
         return null;
     }
-    
+
     @Override
     public boolean execute() {
         PluginReturnValue ret = run();
@@ -135,87 +134,86 @@ public class UpdateProcessTitleStepPlugin implements IStepPluginVersion2 {
     @Override
     public PluginReturnValue run() {
         boolean successfull = true;
-       
-		try {
-			Process process = step.getProzess();
-			Fileformat fileformat = process.readMetadataFile();
-		    VariableReplacer replacer = new VariableReplacer(fileformat != null ? fileformat.getDigitalDocument() : null,
-	                process.getRegelsatz().getPreferences(), process, step);
-	
-	        // create new title
-	        StringBuilder sb = new StringBuilder();
-	        for (ParameterItem pi : parameterList) {
-	        	// replace variables
-	        	switch (pi.getType().toLowerCase()) {
-				
-	        	case "variable":
-	        		// variable from variable replacer
-	                pi.setValue(replacer.replace(pi.getValue()));
-					break;
 
-				case "random":
-					// random number with number of digits
-			        String myId = String.valueOf(ThreadLocalRandom.current().nextInt(1, 999999999 + 1));
-			        // shorten it, if it is too long
-			        int length = Integer.valueOf(pi.getValue());
-			        if (myId.length()> length) {
-			            myId = myId.substring(0,length);
-			        }
-			        // fill it with zeros if it is too short
-			        myId = StringUtils.leftPad(myId, length, "0");
-					pi.setValue(myId);
-					break;
+        try {
+            Process process = step.getProzess();
+            Fileformat fileformat = process.readMetadataFile();
+            VariableReplacer replacer = new VariableReplacer(fileformat != null ? fileformat.getDigitalDocument() : null,
+                    process.getRegelsatz().getPreferences(), process, step);
 
-				case "timestamp":
-					// timestamp
-					long time = System.currentTimeMillis();
-	                pi.setValue(Long.toString(time));
-					break;
-					
-				case "uuid":
-					// uuid
-					UUID uuid = UUID.randomUUID();
-	                pi.setValue(uuid.toString());
-					break;
+            // create new title
+            StringBuilder sb = new StringBuilder();
+            for (ParameterItem pi : parameterList) {
+                // replace variables
+                switch (pi.getType().toLowerCase()) {
 
-				default:
-					break;
-				}
-	        	
-	        	// now add the (changed) value
-	            sb.append(pi.getValue());
-	        }
-	        
-	        // remove non-ascii characters for the sake of TIFF header limits
-	        String newTitle = sb.toString().trim();
-	        if (regexCheck) {
-		        String regex = ConfigurationHelper.getInstance().getProcessTitleReplacementRegex();
-		        newTitle = newTitle.replaceAll(regex, "");
-	        }
-	        
-	        // update the process to use the new title
-	        String oldTitle = process.getTitel();
-	        process.setTitel(newTitle);
-	        ProcessManager.saveProcess(process);
-	        
-	        // adapt the folder names if needed
-	        DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(process.getImagesDirectory()));
+                    case "variable":
+                        // variable from variable replacer
+                        pi.setValue(replacer.replace(pi.getValue()));
+                        break;
+
+                    case "random":
+                        // random number with number of digits
+                        String myId = String.valueOf(ThreadLocalRandom.current().nextInt(1, 999999999 + 1));
+                        // shorten it, if it is too long
+                        int length = Integer.valueOf(pi.getValue());
+                        if (myId.length() > length) {
+                            myId = myId.substring(0, length);
+                        }
+                        // fill it with zeros if it is too short
+                        myId = StringUtils.leftPad(myId, length, "0");
+                        pi.setValue(myId);
+                        break;
+
+                    case "timestamp":
+                        // timestamp
+                        long time = System.currentTimeMillis();
+                        pi.setValue(Long.toString(time));
+                        break;
+
+                    case "uuid":
+                        // uuid
+                        UUID uuid = UUID.randomUUID();
+                        pi.setValue(uuid.toString());
+                        break;
+
+                    default:
+                        break;
+                }
+
+                // now add the (changed) value
+                sb.append(pi.getValue());
+            }
+
+            // remove non-ascii characters for the sake of TIFF header limits
+            String newTitle = sb.toString().trim();
+            if (regexCheck) {
+                String regex = ConfigurationHelper.getInstance().getProcessTitleReplacementRegex();
+                newTitle = newTitle.replaceAll(regex, "");
+            }
+
+            // update the process to use the new title
+            String oldTitle = process.getTitel();
+            process.setTitel(newTitle);
+            ProcessManager.saveProcess(process);
+
+            // adapt the folder names if needed
+            DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(process.getImagesDirectory()));
             for (Path path : stream) {
-                if (Files.isDirectory(path) && path.getFileName().toString().contains(oldTitle) && !path.getFileName().toString().contains(newTitle)) {
-                	Path newPath = Paths.get(path.getParent().toString(), path.getFileName().toString().replace(oldTitle, newTitle));
-                	Files.move(path, newPath);
+                if (Files.isDirectory(path) && path.getFileName().toString().contains(oldTitle)
+                        && !path.getFileName().toString().contains(newTitle)) {
+                    Path newPath = Paths.get(path.getParent().toString(), path.getFileName().toString().replace(oldTitle, newTitle));
+                    Files.move(path, newPath);
                 }
             }
-	        
-		} catch (ReadException | PreferencesException | WriteException | IOException | InterruptedException
-				| SwapException | DAOException e) {
-		    log.error("Error while renaming the process.");
+
+        } catch (ReadException | PreferencesException | IOException | SwapException | DAOException e) {
+            log.error("Error while renaming the process.");
             Helper.setFehlerMeldung("Error while renaming the process.", e);
-            Helper.addMessageToProcessLog(step.getProzess().getId(), LogType.ERROR,
-                    "Error while renaming the process. " + e.getMessage());
+            Helper.addMessageToProcessLog(step.getProzess().getId(), LogType.ERROR, "Error while renaming the process. " + e.getMessage());
             successfull = false;
-		}
-		
+        }
+
         log.info("UpdateProcessTitle step plugin executed");
         if (!successfull) {
             return PluginReturnValue.ERROR;
